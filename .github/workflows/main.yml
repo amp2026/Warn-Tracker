@@ -5,15 +5,11 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch:
 
-# Line 10: 'jobs' must be at the very left
 jobs:
-  # Line 12: 'build' must be indented exactly 2 spaces
   build:
-    # Line 14: 'runs-on' must be indented exactly 4 spaces
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
