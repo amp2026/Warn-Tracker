@@ -1,0 +1,38 @@
+name: WARN Scratch Build
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs daily at midnight
+  workflow_dispatch: # Allows you to trigger it manually
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install BLN Tools
+        run: pip install warn-scraper warn-transformer
+
+      - name: 🔪 Step 1: Extract
+        # This downloads the raw CSVs from all 50 states into a 'raw' folder
+        run: warn-scraper all --data-dir ./data/raw/
+
+      - name: 🪢 Step 2: Transform
+        # This standardizes the messy state files into one clean 'consolidated.csv'
+        run: warn-transformer consolidate --data-dir ./data/raw/ --output-dir ./data/processed/
+
+      - name: ⏫ Step 3: Load
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/processed/consolidated.csv
+          git commit -m "Update consolidated WARN data" || exit 0
+          git push
