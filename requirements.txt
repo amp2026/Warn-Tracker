@@ -1,0 +1,5 @@
+warn-scraper
+warn-transformer
+streamlit>=1.30.0
+pandas
+plotly
