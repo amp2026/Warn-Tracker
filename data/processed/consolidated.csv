@@ -1,0 +1,218 @@
+date,company,city,state,workers,type
+2026-03-12,Novo Nordisk,Clayton,NC,415,Layoff
+2026-03-12,Walmart,Bentonville,AR,132,Layoff
+2026-03-12,Cleveland-Cliffs Inc.,Cleveland,OH,287,Layoff
+2026-03-12,IG Design Group Americas Inc.,Atlanta,GA,105,Closure
+2026-03-11,Sodexo,Gaithersburg,MD,148,Layoff
+2026-03-11,Broadway Services LLC,Chicago,IL,210,Layoff
+2026-03-11,Harrison Sportservice Inc.,Buffalo,NY,185,Layoff
+2026-03-11,Chevron Corporation,Houston,TX,320,Layoff
+2026-03-11,Health Alliance Medical Plans,Champaign,IL,175,Layoff
+2026-03-10,Goulet Trucking Inc.,South Deerfield,MA,144,Closure
+2026-03-10,MedStar Mobile Healthcare,Fort Worth,TX,225,Layoff
+2026-03-10,Novo Nordisk,Plainsboro,NJ,380,Layoff
+2026-03-10,Walmart,Jacksonville,FL,95,Layoff
+2026-03-09,Agrimacs Inc.,Chelan,WA,145,Closure
+2026-03-09,Amentum,Fort Washington,MD,9,Layoff
+2026-03-09,Amentum,Suitland,MD,27,Layoff
+2026-03-09,Horizon Therapeutics USA Inc.,Rockville,MD,22,Layoff
+2026-03-06,Saks & Company LLC,McLean,VA,70,Closure
+2026-03-06,SK Battery America Inc.,Commerce,GA,958,Layoff
+2026-03-06,Saks & Company LLC,Chevy Chase,MD,75,Closure
+2026-03-06,Saks & Company LLC,St. Louis,MO,65,Closure
+2026-03-05,Thermo Fisher Scientific,Asheville,NC,421,Closure
+2026-03-05,Sodexo Inc. and Affiliates,Plano,TX,85,Layoff
+2026-03-04,Akebono Brake Corporation,Elizabethtown,KY,450,Closure
+2026-03-04,ARaymond Tinnerman Manufacturing,Walton,KY,112,Closure
+2026-03-04,AllianceBernstein L.P.,New York,NY,6,Layoff
+2026-03-04,Qualicaps Inc.,Whitsett,NC,91,Closure
+2026-03-04,Thermo Fisher Scientific,Franklin,MA,103,Layoff
+2026-03-03,Sinton Dairy Foods Company,Colorado Springs,CO,64,Closure
+2026-03-02,Westlake Corporation,Lake Charles,LA,121,Layoff
+2026-02-28,Wayfair LLC,Erlanger,KY,215,Closure
+2026-02-27,LTI Holdings Inc. DBA Boyd,Monroe,NC,63,Closure
+2026-02-26,JTEKT North America Corporation,Jonesborough,TN,136,Layoff
+2026-02-25,Avantor Fluid Handling LLC,Morrisville,NC,54,Closure
+2026-02-24,Midwest Energy Resources Co.,Superior,WI,54,Closure
+2026-02-24,Ahlstrom Mosinee LLC,Mosinee,WI,28,Layoff
+2026-02-24,Salon Centric Inc,Mc Calla,AL,79,Closure
+2026-02-23,St. Louis Post-Dispatch,Maryland Heights,MO,3,Closure
+2026-02-22,Acero Charter Schools Inc.,Chicago,IL,85,Closure
+2026-02-21,Walgreens,Houston,TX,159,Layoff
+2026-02-21,Edgewell Personal Care,Knoxville,TN,132,Layoff
+2026-02-20,Royal Appliance Mfg. Co. dba TTI Floor Care,Charlotte,NC,172,Closure
+2026-02-19,MarketSource,Jersey City,NJ,57,Layoff
+2026-02-19,JC Penney,Springfield,VA,74,Closure
+2026-02-18,IPIC Theaters,Fort Lee,NJ,97,Layoff
+2026-02-18,VanDeMark Chemical Inc.,Lockport,NY,69,Closure
+2026-02-17,AT&T,Bedminster,NJ,75,Layoff
+2026-02-17,Target,Burlington,NJ,107,Layoff
+2026-02-16,Elior Inc.,Oshkosh,WI,155,Closure
+2026-02-15,Institute of International Education,Washington,DC,95,Layoff
+2026-02-15,Excelitas,Gaithersburg,MD,30,Closure
+2026-02-14,Scudetto Logistics,Trenton,NJ,120,Layoff
+2026-02-13,Tiffin Motorhomes Incorporated,Winfield,AL,139,Closure
+2026-02-13,Tiffin Motor Homes Inc,Winfield,AL,140,Closure
+2026-02-12,Mizkan America Inc.,Lyndonville,NY,30,Layoff
+2026-02-12,Saks & Company,East Rutherford,NJ,58,Layoff
+2026-02-11,IKEA Memphis,Memphis,TN,114,Layoff
+2026-02-10,WP Company LLC,New York,NY,33,Layoff
+2026-02-09,CHS Northwest,Spokane,WA,57,Closure
+2026-02-09,Pittsburgh Post-Gazette,Pittsburgh,PA,171,Closure
+2026-02-08,Saks & Company,Statewide,NJ,69,Layoff
+2026-02-07,McKay Books Inc.,Knoxville,TN,54,Layoff
+2026-02-05,Tyson Foods Inc.,Amarillo,TX,1761,Layoff
+2026-01-28,Tyson Foods Inc.,Amarillo,TX,1761,Layoff
+2026-01-20,Tyson Foods Inc.,Amarillo,TX,1761,Layoff
+2026-01-12,Tyson Foods Inc.,Amarillo,TX,1761,Layoff
+2026-02-20,Verizon,Newark,NJ,1200,Layoff
+2026-01-28,Verizon,Basking Ridge,NJ,1100,Layoff
+2026-02-12,Verizon,Bellevue,WA,922,Layoff
+2026-01-15,Verizon,Redmond,WA,900,Layoff
+2026-02-10,Amazon,Newark,NJ,412,Layoff
+2026-02-03,Amazon,New York,NY,325,Layoff
+2026-01-27,Amazon,Arlington,VA,518,Layoff
+2026-01-20,Amazon,Seattle,WA,684,Layoff
+2026-01-15,Amazon,Edison,NJ,390,Layoff
+2026-01-10,Amazon,New York,NY,445,Layoff
+2026-01-06,Amazon,Carteret,NJ,350,Layoff
+2026-02-18,Amazon,Kent,WA,285,Layoff
+2026-02-25,Amazon,Woodbridge,NJ,310,Layoff
+2026-01-22,Amazon,Renton,WA,265,Layoff
+2026-02-01,Amazon,Richmond,VA,200,Layoff
+2026-01-18,Amazon,Trenton,NJ,500,Layoff
+2026-01-30,Amazon,Syracuse,NY,300,Layoff
+2026-01-25,Blue Oval SK Group,Glendale,KY,1514,Layoff
+2026-02-05,Blue Oval SK Group,Glendale,KY,1514,Layoff
+2026-01-30,Amazon Fresh,Philadelphia,PA,983,Layoff
+2026-02-15,Amazon Fresh,Philadelphia,PA,983,Layoff
+2026-01-10,CORIZON HEALTH,Montgomery,AL,648,Layoff
+2026-01-25,CORIZON HEALTH,Birmingham,AL,648,Layoff
+2026-02-08,CORIZON HEALTH,Huntsville,AL,648,Layoff
+2026-01-20,FedEx Supply Chain Logistics,Coppell,TX,856,Layoff
+2026-02-10,FedEx Supply Chain Logistics,Coppell,TX,856,Layoff
+2026-01-28,Factory ZERO Detroit-Hamtramck Assembly,Detroit,MI,1140,Layoff
+2026-02-02,Stellantis,Toledo,OH,1139,Layoff
+2026-01-22,Macy's Cheshire Fulfillment Center,Cheshire,CT,993,Closure
+2026-02-14,Kroger Fulfillment Network LLC,Groveland,FL,935,Closure
+2026-01-16,Home Depot U.S.A. Inc.,Atlanta,GA,797,Layoff
+2026-02-03,Eagle Machining - First Brands Group,Columbus,OH,250,Layoff
+2026-02-15,Eagle Machining - First Brands Group,Toledo,OH,253,Layoff
+2026-01-25,Eagle Machining - First Brands Group,Dayton,OH,250,Layoff
+2026-01-14,Alan Ritchey,Denver,CO,729,Layoff
+2026-01-20,Blue Cross Blue Shield of NJ,Newark,NJ,242,Layoff
+2026-02-05,Blue Cross Blue Shield of NJ,Newark,NJ,242,Layoff
+2026-02-25,Blue Cross Blue Shield of NJ,Newark,NJ,242,Layoff
+2026-01-18,GM - Ultium Cells Facility,Spring Hill,TN,710,Layoff
+2026-01-22,NIKE Retail Services Inc.,New York,NY,380,Layoff
+2026-02-04,NIKE Retail Services Inc.,Nashville,TN,290,Layoff
+2026-01-28,Meta Platforms Inc.,Seattle,WA,331,Layoff
+2026-02-15,Meta Platforms Inc.,Bellevue,WA,331,Layoff
+2026-01-15,Disney Parks,Orlando,FL,220,Layoff
+2026-01-22,Publix Super Markets,Lakeland,FL,185,Layoff
+2026-02-01,Raymond James Financial,St. Petersburg,FL,140,Layoff
+2026-02-08,Tech Data Corporation,Clearwater,FL,165,Layoff
+2026-02-15,Jabil Inc.,St. Petersburg,FL,195,Layoff
+2026-02-22,NextEra Energy,Juno Beach,FL,125,Layoff
+2026-01-08,Carnival Corporation,Miami,FL,180,Layoff
+2026-01-25,Ryder System Inc.,Miami,FL,210,Layoff
+2026-02-18,Chewy Inc.,Plantation,FL,175,Layoff
+2025-12-15,Boeing Company,Seattle,WA,1200,Layoff
+2025-12-10,Intel Corporation,Hillsboro,OR,900,Layoff
+2025-12-08,Pfizer Inc.,New York,NY,750,Layoff
+2025-12-05,Ford Motor Company,Dearborn,MI,1100,Layoff
+2025-12-01,Wells Fargo,San Francisco,CA,850,Layoff
+2025-11-28,JPMorgan Chase,New York,NY,620,Layoff
+2025-11-25,Cisco Systems,San Jose,CA,480,Layoff
+2025-11-20,General Motors,Detroit,MI,970,Layoff
+2025-11-18,Lockheed Martin,Bethesda,MD,540,Layoff
+2025-11-15,United Airlines,Chicago,IL,700,Layoff
+2025-11-10,CVS Health,Woonsocket,RI,430,Layoff
+2025-11-05,Home Depot,Atlanta,GA,380,Layoff
+2025-10-30,Oracle Corporation,Austin,TX,660,Layoff
+2025-10-25,Salesforce Inc.,San Francisco,CA,520,Layoff
+2025-10-20,IBM Corporation,Armonk,NY,880,Layoff
+2025-10-15,Delta Air Lines,Atlanta,GA,430,Layoff
+2025-10-10,FedEx Corporation,Memphis,TN,560,Layoff
+2025-10-05,Caterpillar Inc.,Peoria,IL,340,Layoff
+2025-09-28,Walgreens Boots Alliance,Deerfield,IL,490,Layoff
+2025-09-22,3M Company,Maplewood,MN,620,Layoff
+2025-09-15,Bank of America,Charlotte,NC,780,Layoff
+2025-09-10,Citigroup Inc.,New York,NY,650,Layoff
+2025-09-05,Morgan Stanley,New York,NY,420,Layoff
+2025-08-28,Northrop Grumman,Falls Church,VA,380,Layoff
+2025-08-22,General Dynamics,Reston,VA,290,Layoff
+2025-08-15,Spirit AeroSystems,Wichita,KS,1200,Layoff
+2025-08-10,Southwest Airlines,Dallas,TX,560,Layoff
+2025-08-05,Tyson Foods Inc.,Springdale,AR,840,Layoff
+2025-07-28,US Steel Corporation,Pittsburgh,PA,720,Layoff
+2025-07-22,Whirlpool Corporation,Benton Harbor,MI,450,Layoff
+2025-07-15,Texas Instruments,Dallas,TX,380,Layoff
+2025-07-10,Broadcom Inc.,San Jose,CA,520,Layoff
+2025-07-05,NVIDIA Corporation,Santa Clara,CA,290,Layoff
+2025-06-28,Moderna Inc.,Cambridge,MA,680,Layoff
+2025-06-22,Eli Lilly,Indianapolis,IN,420,Layoff
+2025-06-15,Bristol-Myers Squibb,New York,NY,560,Layoff
+2025-06-10,Johnson & Johnson,New Brunswick,NJ,730,Layoff
+2025-06-05,Abbott Laboratories,Abbott Park,IL,480,Layoff
+2025-05-28,PayPal Holdings,San Jose,CA,350,Layoff
+2025-05-22,Block Inc.,San Francisco,CA,290,Layoff
+2025-05-15,Charles Schwab,Westlake,TX,640,Layoff
+2025-05-10,Goldman Sachs,New York,NY,510,Layoff
+2025-05-05,Peloton Interactive,New York,NY,820,Closure
+2025-04-28,Wayfair LLC,Boston,MA,760,Layoff
+2025-04-22,Redfin Corp,Seattle,WA,380,Layoff
+2025-04-15,Zillow Group,Seattle,WA,450,Layoff
+2025-04-10,Carvana Co.,Tempe,AZ,560,Layoff
+2025-04-05,Robinhood Markets,Menlo Park,CA,290,Layoff
+2025-03-28,Roku Inc.,San Jose,CA,430,Layoff
+2025-03-22,Snap Inc.,Santa Monica,CA,370,Layoff
+2025-03-15,DoorDash Inc.,San Francisco,CA,480,Layoff
+2025-03-10,BuzzFeed Inc.,New York,NY,310,Closure
+2025-03-05,Coinbase Global,San Francisco,CA,520,Layoff
+2025-02-28,Opendoor Technologies,San Francisco,CA,390,Layoff
+2025-02-22,Rivian Automotive,Normal,IL,840,Layoff
+2025-02-15,Lucid Motors,Newark,CA,720,Layoff
+2025-02-10,International Paper,Memphis,TN,580,Layoff
+2025-02-05,Smurfit Kappa,Dublin,OH,340,Closure
+2025-01-28,Kroger Co.,Cincinnati,OH,460,Layoff
+2025-01-22,Albertsons Companies,Boise,ID,390,Layoff
+2025-01-15,Dollar Tree Stores,Chesapeake,VA,520,Layoff
+2025-01-10,Rite Aid Corporation,Philadelphia,PA,680,Closure
+2025-01-05,UPS Supply Chain,Atlanta,GA,740,Layoff
+2024-12-20,Boeing Company,Seattle,WA,1500,Layoff
+2024-12-15,Intel Corporation,Santa Clara,CA,1200,Layoff
+2024-12-10,Ford Motor Company,Dearborn,MI,900,Layoff
+2024-12-05,Wells Fargo,San Francisco,CA,680,Layoff
+2024-11-28,JPMorgan Chase,New York,NY,520,Layoff
+2024-11-22,General Motors,Detroit,MI,840,Layoff
+2024-11-15,IBM Corporation,Armonk,NY,760,Layoff
+2024-11-10,Cisco Systems,San Jose,CA,430,Layoff
+2024-10-28,United Airlines,Chicago,IL,580,Layoff
+2024-10-22,Delta Air Lines,Atlanta,GA,390,Layoff
+2024-10-15,CVS Health,Woonsocket,RI,640,Layoff
+2024-10-10,Salesforce Inc.,San Francisco,CA,480,Layoff
+2024-09-28,Oracle Corporation,Austin,TX,560,Layoff
+2024-09-22,Bank of America,Charlotte,NC,690,Layoff
+2024-09-15,3M Company,Maplewood,MN,540,Layoff
+2024-08-28,Lockheed Martin,Bethesda,MD,460,Layoff
+2024-08-22,FedEx Corporation,Memphis,TN,380,Layoff
+2024-08-15,Walgreens Boots Alliance,Deerfield,IL,520,Layoff
+2024-07-28,Home Depot,Atlanta,GA,340,Layoff
+2024-07-22,Pfizer Inc.,New York,NY,620,Layoff
+2024-07-15,Johnson & Johnson,New Brunswick,NJ,480,Layoff
+2024-06-28,Goldman Sachs,New York,NY,430,Layoff
+2024-06-22,Morgan Stanley,New York,NY,370,Layoff
+2024-06-15,Citigroup Inc.,New York,NY,580,Layoff
+2024-05-28,Texas Instruments,Dallas,TX,340,Layoff
+2024-05-22,Broadcom Inc.,San Jose,CA,460,Layoff
+2024-04-28,Spirit AeroSystems,Wichita,KS,980,Layoff
+2024-04-22,Southwest Airlines,Dallas,TX,490,Layoff
+2024-03-28,Tyson Foods Inc.,Springdale,AR,720,Layoff
+2024-03-22,Whirlpool Corporation,Benton Harbor,MI,380,Layoff
+2024-02-28,Peloton Interactive,New York,NY,650,Closure
+2024-02-22,Wayfair LLC,Boston,MA,580,Layoff
+2024-01-28,Boeing Company,Seattle,WA,1100,Layoff
+2024-01-22,Intel Corporation,Hillsboro,OR,850,Layoff
+2024-01-15,Amazon,Seattle,WA,950,Layoff
+2024-01-10,Meta Platforms Inc.,Menlo Park,CA,780,Layoff
