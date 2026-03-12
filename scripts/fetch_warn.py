@@ -22,15 +22,29 @@ headers = {"X-API-Key": API_KEY}
 
 # Map WARN Firehose field names → app column names
 COLUMN_MAP = {
-    "company_name":       "company",
-    "employer_name":      "company",
+    # company
+    "company_name":    "company",
+    "employer_name":   "company",
+    # workers
     "employees_affected": "workers",
-    "num_employees":      "workers",
-    "affected_workers":   "workers",
-    "notice_date":        "date",
-    "received_date":      "date",
-    "layoff_date":        "date",
-    "event_date":         "date",
+    "num_employees":   "workers",
+    "affected_workers": "workers",
+    # date
+    "notice_date":     "date",
+    "received_date":   "date",
+    "layoff_date":     "date",
+    "event_date":      "date",
+    # type (layoff vs closure)
+    "layoff_type":     "type",
+    "event_type":      "type",
+    "notice_type":     "type",
+    "action_type":     "type",
+    "type_of_layoff":  "type",
+    # city
+    "city_name":       "city",
+    "municipality":    "city",
+    "facility_city":   "city",
+    "location":        "city",
 }
 
 all_records = []
@@ -87,7 +101,7 @@ df.columns = [c.lower().replace(" ", "_").replace("-", "_") for c in df.columns]
 df = df.rename(columns=COLUMN_MAP)
 
 # Ensure required columns exist (fill with None if missing)
-for col in ("state", "company", "workers", "date"):
+for col in ("state", "company", "workers", "date", "city", "type"):
     if col not in df.columns:
         df[col] = None
 
