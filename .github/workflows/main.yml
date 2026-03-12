@@ -1,4 +1,4 @@
-name: WARN Firehose Build
+name: WARN Data Build
 
 on:
   schedule:
@@ -20,18 +20,94 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: pip install requests pandas
+      - name: Install tools
+        run: pip install warn-scraper warn-transformer pandas requests
 
-      - name: Fetch WARN data from Firehose
+      # ── Primary source: warn-scraper covers 40 states + DC ──────────────
+      - name: Scrape all supported states (warn-scraper)
+        run: warn-scraper all --data-dir ./data/raw/
+
+      - name: Transform & consolidate (warn-transformer)
+        run: warn-transformer consolidate --data-dir ./data/raw/ --output-dir ./data/processed/
+
+      # ── Supplementary: WARN Firehose for the 10 unsupported states ───────
+      # Missing states: AR, MA, MN, MS, NC, NV, NH, ND, WV, WY
+      - name: Fetch missing states via WARN Firehose
         env:
           WARN_FIREHOSE_API_KEY: ${{ secrets.WARN_FIREHOSE_API_KEY }}
-        run: python scripts/fetch_warn.py
+        run: python scripts/fetch_missing_states.py
+
+      # ── Merge both sources and normalize column names ────────────────────
+      - name: Merge and normalize
+        run: |
+          python - <<'EOF'
+          import pandas as pd, os, glob
+
+          primary = "data/processed/consolidated.csv"
+          supplement = "data/processed/missing_states.csv"
+
+          frames = []
+
+          # Load warn-scraper output
+          if os.path.exists(primary):
+              df_main = pd.read_csv(primary)
+              print(f"warn-scraper: {len(df_main)} records from {primary}")
+              frames.append(df_main)
+          else:
+              print("WARNING: no consolidated.csv from warn-scraper")
+
+          # Load WARN Firehose supplementary data
+          if os.path.exists(supplement):
+              df_supp = pd.read_csv(supplement)
+              print(f"WARN Firehose (missing states): {len(df_supp)} records")
+              frames.append(df_supp)
+
+          if not frames:
+              print("ERROR: no data to process")
+              raise SystemExit(1)
+
+          df = pd.concat(frames, ignore_index=True)
+
+          # Normalize column names across both sources
+          df.columns = [c.lower().replace(" ", "_").replace("-", "_") for c in df.columns]
+
+          renames = {
+              "jobs":            "workers",
+              "no_of_employees": "workers",
+              "employees":       "workers",
+              "layoffs":         "workers",
+              "warn_type":       "type",
+              "classification":  "type",
+          }
+          df = df.rename(columns=renames)
+
+          for col in ("state", "company", "workers", "date", "city", "type"):
+              if col not in df.columns:
+                  df[col] = None
+
+          df["workers"] = pd.to_numeric(df["workers"], errors="coerce").fillna(0).astype(int)
+          df["date"]    = pd.to_datetime(df["date"], errors="coerce")
+          df = df.dropna(subset=["date"])
+
+          # Drop duplicates (same company + state + date + workers)
+          before = len(df)
+          df = df.drop_duplicates(subset=["company", "state", "date", "workers"], keep="first")
+          print(f"Deduped: {before} → {len(df)} records")
+
+          df = df.sort_values("date", ascending=False).reset_index(drop=True)
+          df.to_csv(primary, index=False)
+          print(f"Final: {len(df)} records saved to {primary}")
+          print(f"States covered: {sorted(df['state'].dropna().unique().tolist())}")
+
+          # Clean up temp file
+          if os.path.exists(supplement):
+              os.remove(supplement)
+          EOF
 
       - name: Commit and push data
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add data/processed/consolidated.csv
-          git commit -m "Update WARN data from Firehose [skip ci]" || echo "No changes to commit"
+          git commit -m "Update WARN data [skip ci]" || echo "No changes to commit"
           git push
