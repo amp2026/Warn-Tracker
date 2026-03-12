@@ -20,36 +20,64 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install scraper tools
-        run: pip install warn-scraper warn-transformer pandas
+      - name: Install tools
+        run: pip install warn-scraper warn-transformer pandas requests
 
-      - name: Scrape all 50 states
+      # ── Primary source: warn-scraper covers 40 states + DC ──────────────
+      - name: Scrape all supported states (warn-scraper)
         run: warn-scraper all --data-dir ./data/raw/
 
-      - name: Transform & consolidate
+      - name: Transform & consolidate (warn-transformer)
         run: warn-transformer consolidate --data-dir ./data/raw/ --output-dir ./data/processed/
 
-      - name: Normalize column names for dashboard
+      # ── Supplementary: WARN Firehose for the 10 unsupported states ───────
+      # Missing states: AR, MA, MN, MS, NC, NV, NH, ND, WV, WY
+      - name: Fetch missing states via WARN Firehose
+        env:
+          WARN_FIREHOSE_API_KEY: ${{ secrets.WARN_FIREHOSE_API_KEY }}
+        run: python scripts/fetch_missing_states.py
+
+      # ── Merge both sources and normalize column names ────────────────────
+      - name: Merge and normalize
         run: |
           python - <<'EOF'
-          import pandas as pd, sys
+          import pandas as pd, os, glob
 
-          path = "data/processed/consolidated.csv"
-          df = pd.read_csv(path)
-          print("Raw columns:", df.columns.tolist())
+          primary = "data/processed/consolidated.csv"
+          supplement = "data/processed/missing_states.csv"
 
+          frames = []
+
+          # Load warn-scraper output
+          if os.path.exists(primary):
+              df_main = pd.read_csv(primary)
+              print(f"warn-scraper: {len(df_main)} records from {primary}")
+              frames.append(df_main)
+          else:
+              print("WARNING: no consolidated.csv from warn-scraper")
+
+          # Load WARN Firehose supplementary data
+          if os.path.exists(supplement):
+              df_supp = pd.read_csv(supplement)
+              print(f"WARN Firehose (missing states): {len(df_supp)} records")
+              frames.append(df_supp)
+
+          if not frames:
+              print("ERROR: no data to process")
+              raise SystemExit(1)
+
+          df = pd.concat(frames, ignore_index=True)
+
+          # Normalize column names across both sources
           df.columns = [c.lower().replace(" ", "_").replace("-", "_") for c in df.columns]
 
           renames = {
-              "jobs":           "workers",
+              "jobs":            "workers",
               "no_of_employees": "workers",
-              "employees":      "workers",
-              "layoffs":        "workers",
-              "warn_type":      "type",
-              "classification": "type",
-              "notice_type":    "type",
-              "location":       "city",
-              "facility":       "city",
+              "employees":       "workers",
+              "layoffs":         "workers",
+              "warn_type":       "type",
+              "classification":  "type",
           }
           df = df.rename(columns=renames)
 
@@ -59,9 +87,21 @@ jobs:
 
           df["workers"] = pd.to_numeric(df["workers"], errors="coerce").fillna(0).astype(int)
           df["date"]    = pd.to_datetime(df["date"], errors="coerce")
-          df = df.dropna(subset=["date"]).sort_values("date", ascending=False)
-          df.to_csv(path, index=False)
-          print(f"Saved {len(df)} records with columns: {df.columns.tolist()}")
+          df = df.dropna(subset=["date"])
+
+          # Drop duplicates (same company + state + date + workers)
+          before = len(df)
+          df = df.drop_duplicates(subset=["company", "state", "date", "workers"], keep="first")
+          print(f"Deduped: {before} → {len(df)} records")
+
+          df = df.sort_values("date", ascending=False).reset_index(drop=True)
+          df.to_csv(primary, index=False)
+          print(f"Final: {len(df)} records saved to {primary}")
+          print(f"States covered: {sorted(df['state'].dropna().unique().tolist())}")
+
+          # Clean up temp file
+          if os.path.exists(supplement):
+              os.remove(supplement)
           EOF
 
       - name: Commit and push data
