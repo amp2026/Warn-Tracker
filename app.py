@@ -5,7 +5,7 @@ import plotly.express as px
 st.set_page_config(page_title="WARN Tracker: From Scratch", layout="wide")
 
 # Point to the file your GitHub Action just created
-DATA_URL = "https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/data/processed/consolidated.csv"
+DATA_URL = "https://raw.githubusercontent.com/amp2026/Warn-Tracker/main/data/processed/consolidated.csv"
 
 @st.cache_data
 def load_data():
