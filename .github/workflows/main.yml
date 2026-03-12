@@ -1,4 +1,4 @@
-name: WARN Firehose Build
+name: WARN Data Build
 
 on:
   schedule:
@@ -20,18 +20,54 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: pip install requests pandas
+      - name: Install scraper tools
+        run: pip install warn-scraper warn-transformer pandas
 
-      - name: Fetch WARN data from Firehose
-        env:
-          WARN_FIREHOSE_API_KEY: ${{ secrets.WARN_FIREHOSE_API_KEY }}
-        run: python scripts/fetch_warn.py
+      - name: Scrape all 50 states
+        run: warn-scraper all --data-dir ./data/raw/
+
+      - name: Transform & consolidate
+        run: warn-transformer consolidate --data-dir ./data/raw/ --output-dir ./data/processed/
+
+      - name: Normalize column names for dashboard
+        run: |
+          python - <<'EOF'
+          import pandas as pd, sys
+
+          path = "data/processed/consolidated.csv"
+          df = pd.read_csv(path)
+          print("Raw columns:", df.columns.tolist())
+
+          df.columns = [c.lower().replace(" ", "_").replace("-", "_") for c in df.columns]
+
+          renames = {
+              "jobs":           "workers",
+              "no_of_employees": "workers",
+              "employees":      "workers",
+              "layoffs":        "workers",
+              "warn_type":      "type",
+              "classification": "type",
+              "notice_type":    "type",
+              "location":       "city",
+              "facility":       "city",
+          }
+          df = df.rename(columns=renames)
+
+          for col in ("state", "company", "workers", "date", "city", "type"):
+              if col not in df.columns:
+                  df[col] = None
+
+          df["workers"] = pd.to_numeric(df["workers"], errors="coerce").fillna(0).astype(int)
+          df["date"]    = pd.to_datetime(df["date"], errors="coerce")
+          df = df.dropna(subset=["date"]).sort_values("date", ascending=False)
+          df.to_csv(path, index=False)
+          print(f"Saved {len(df)} records with columns: {df.columns.tolist()}")
+          EOF
 
       - name: Commit and push data
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add data/processed/consolidated.csv
-          git commit -m "Update WARN data from Firehose [skip ci]" || echo "No changes to commit"
+          git commit -m "Update WARN data [skip ci]" || echo "No changes to commit"
           git push
