@@ -1,6 +1,10 @@
 """
 Fetch WARN Act data from WARN Firehose API and save as consolidated CSV.
 Requires WARN_FIREHOSE_API_KEY environment variable.
+
+API docs: https://warnfirehose.com/developers
+Auth:     X-API-Key header
+Endpoint: GET https://warnfirehose.com/api/records
 """
 import os
 import sys
@@ -11,68 +15,79 @@ API_KEY = os.environ.get("WARN_FIREHOSE_API_KEY", "")
 BASE_URL = "https://warnfirehose.com/api/records"
 
 if not API_KEY:
-    print("Warning: WARN_FIREHOSE_API_KEY not set — proceeding without auth (rate limits may apply)")
+    print("ERROR: WARN_FIREHOSE_API_KEY environment variable not set.", file=sys.stderr)
+    sys.exit(1)
 
-headers = {}
-if API_KEY:
-    headers["Authorization"] = f"Bearer {API_KEY}"
+headers = {"X-API-Key": API_KEY}
 
+# Map WARN Firehose field names → app column names
 COLUMN_MAP = {
-    "company_name": "company",
+    "company_name":       "company",
+    "employer_name":      "company",
     "employees_affected": "workers",
-    "notice_date": "date",
-    "num_employees": "workers",
-    "layoff_date": "date",
-    "received_date": "date",
+    "num_employees":      "workers",
+    "affected_workers":   "workers",
+    "notice_date":        "date",
+    "received_date":      "date",
+    "layoff_date":        "date",
+    "event_date":         "date",
 }
 
 all_records = []
 page = 1
 
-print("Fetching WARN records from Firehose...")
+print(f"Fetching WARN records from {BASE_URL} ...")
 while True:
-    params = {"page": page, "limit": 1000}
-    try:
-        resp = requests.get(BASE_URL, headers=headers, params=params, timeout=60)
-        resp.raise_for_status()
-    except requests.HTTPError as e:
-        print(f"HTTP error on page {page}: {e}", file=sys.stderr)
+    resp = requests.get(
+        BASE_URL,
+        headers=headers,
+        params={"page": page, "limit": 1000},
+        timeout=60,
+    )
+
+    if resp.status_code == 401:
+        print("Authentication failed — check WARN_FIREHOSE_API_KEY.", file=sys.stderr)
         sys.exit(1)
+    resp.raise_for_status()
 
     payload = resp.json()
 
-    # Handle both list response and paginated object response
+    # Support both plain list and paginated envelope responses
     if isinstance(payload, list):
         records = payload
     else:
-        records = payload.get("data") or payload.get("records") or payload.get("results") or []
+        records = (
+            payload.get("data")
+            or payload.get("records")
+            or payload.get("results")
+            or []
+        )
 
     if not records:
         break
 
     all_records.extend(records)
-    print(f"  page {page}: {len(records)} records (total so far: {len(all_records)})")
+    print(f"  page {page}: {len(records)} records (running total: {len(all_records)})")
 
-    # Stop if fewer than limit returned (last page)
     if len(records) < 1000:
-        break
+        break  # last page
 
     page += 1
 
 if not all_records:
-    print("No records fetched — check API key and endpoint.", file=sys.stderr)
+    print("No records returned — the dataset may be empty or the plan has no access.", file=sys.stderr)
     sys.exit(1)
 
 df = pd.DataFrame(all_records)
 
-# Normalize column names to lowercase / underscored
-df.columns = [c.lower().replace(" ", "_") for c in df.columns]
+# Normalize column names to lowercase snake_case
+df.columns = [c.lower().replace(" ", "_").replace("-", "_") for c in df.columns]
 
-# Rename to standard app column names
+# Rename to standardized app column names
 df = df.rename(columns=COLUMN_MAP)
 
-# Ensure required columns exist
-for col in ["state", "company", "workers", "date"]:
+# Ensure required columns exist (fill with None if missing)
+for col in ("state", "company", "workers", "date"):
     if col not in df.columns:
         df[col] = None
 
@@ -81,4 +96,4 @@ df["date"] = pd.to_datetime(df["date"], errors="coerce")
 os.makedirs("data/processed", exist_ok=True)
 out_path = "data/processed/consolidated.csv"
 df.to_csv(out_path, index=False)
-print(f"Saved {len(df)} records to {out_path}")
+print(f"Saved {len(df)} records → {out_path}")
