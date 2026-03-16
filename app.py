@@ -92,6 +92,9 @@ def load_data() -> pd.DataFrame:
     df["city"]    = df["city"].fillna("")
     df["type"]    = df["type"].fillna("Layoff")
 
+    if "scraped_at" in df.columns:
+        df["scraped_at"] = pd.to_datetime(df["scraped_at"], errors="coerce", utc=True)
+
     return (df.dropna(subset=["date"])
               .sort_values("date", ascending=False)
               .reset_index(drop=True))
@@ -160,7 +163,10 @@ if raw.empty:
 hdr_l, hdr_r = st.columns([5, 1])
 with hdr_l:
     st.markdown("## ⚠️ WARN Act Tracker")
-    last = raw["date"].max().strftime("%b %d, %Y")
+    if "scraped_at" in raw.columns and raw["scraped_at"].notna().any():
+        last = raw["scraped_at"].max().strftime("%b %d, %Y")
+    else:
+        last = raw["date"].max().strftime("%b %d, %Y")
     st.caption(f"Data from state WARN filings · Last updated {last}")
 with hdr_r:
     if st.button("🔄 Refresh", width="stretch"):
