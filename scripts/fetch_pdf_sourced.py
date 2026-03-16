@@ -58,7 +58,7 @@ def _clean(text):
 def _is_recent(url_or_text, cutoff_year=None):
     """Return True if the URL or text contains a recent year (>= cutoff)."""
     if cutoff_year is None:
-        cutoff_year = date.today().year - 1   # include current + previous year
+        cutoff_year = 2024   # include 2024 and later
     years = re.findall(r"\b(20\d{2})\b", url_or_text)
     return any(int(y) >= cutoff_year for y in years)
 
@@ -224,7 +224,7 @@ def fetch_mn():
         return pd.DataFrame()
 
     # Filter to recent years only to keep runtime manageable
-    cutoff_year = date.today().year - 1
+    cutoff_year = 2024
     recent = [u for u in pdf_links if _is_recent(u, cutoff_year)]
     if not recent:
         # Fall back to all found if year filter removes everything
