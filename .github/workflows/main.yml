@@ -30,12 +30,12 @@ jobs:
       - name: Scrape all supported states (warn-scraper)
         # Some state sites timeout or change structure — don't let one bad state
         # kill the whole run. The transformer will work with whatever was saved.
+        continue-on-error: true
         run: |
           warn-scraper \
             AK AL AZ CA CO CT DC DE FL GA HI IA ID IL IN KS KY LA \
             MD ME MI MO MT NE NJ NM NY OH OK OR PA RI SC SD TN TX UT VA VT WI \
-            --data-dir ./data/raw/ \
-          || echo "warn-scraper finished with errors; continuing with partial data"
+            --data-dir ./data/raw/
 
       # ── WA: custom scraper with proper last-page detection ───────────────
       - name: Fetch Washington State (custom scraper)
@@ -57,7 +57,8 @@ jobs:
       # WV  → workforcewv.org HTML listing
       # MS  → mdes.ms.gov HTML table
       # NV  → detr.nv.gov PDF (pdfplumber)
-      # AR/WY → no public data (state law); NH → no public list
+      # NH  → nhes.nh.gov individual notice PDFs (pdfplumber)
+      # AR/WY → no public data (state law)
       - name: Fetch missing states (direct scrapers)
         run: python scripts/fetch_missing_states.py
 
@@ -66,15 +67,6 @@ jobs:
       # Records tagged source_quality="pdf_sourced" (lower precision).
       - name: Fetch PDF-sourced states (MN, ND)
         run: python scripts/fetch_pdf_sourced.py
-
-      # ── layoffdata.com — aggregated WARN database ────────────────────────
-      # Covers the 10 warn-scraper-missing states + DC.
-      # DC: fills the early-year gap before DC publishes its year-specific
-      #     WARN page (warn-notifications-YYYY, typically live April/May).
-      # NH: no other public source exists.
-      # AR/WY: skipped — no public data by state law.
-      - name: Fetch missing states + DC via layoffdata.com
-        run: python scripts/fetch_layoffdata.py
 
       # ── Merge all sources and normalize column names ──────────────────────
       - name: Merge and normalize
@@ -85,7 +77,6 @@ jobs:
           primary      = "data/processed/consolidated.csv"
           supplement   = "data/processed/missing_states.csv"
           pdf_src      = "data/processed/pdf_sourced_states.csv"
-          layoffdata   = "data/processed/layoffdata_states.csv"
 
           frames = []
 
@@ -100,9 +91,8 @@ jobs:
 
           # Priority order matters for dedup (higher priority = lower rank number)
           load(primary,    "csv",          "warn-scraper + WA")
-          load(supplement, "html_scraped", "Direct state scrapers (MA NC WV MS NV)")
+          load(supplement, "html_scraped", "Direct state scrapers (MA NC WV MS NV NH)")
           load(pdf_src,    "pdf_sourced",  "PDF-sourced (MN ND)")
-          load(layoffdata, "html_scraped", "layoffdata.com (DC MA MN MS NC NV NH ND WV)")
 
           if not frames:
               print("WARNING: no new data; keeping existing consolidated.csv unchanged")
@@ -148,7 +138,7 @@ jobs:
           df.to_csv(primary, index=False)
           print(f"Final: {len(df)} records saved to {primary}")
 
-          for path in (supplement, pdf_src, layoffdata):
+          for path in (supplement, pdf_src):
               if os.path.exists(path):
                   os.remove(path)
           EOF
