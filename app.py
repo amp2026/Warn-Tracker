@@ -464,13 +464,16 @@ with t_db:
                            width='stretch')
     with dl3:
         import json
+        _export = raw.assign(date=raw["date"].dt.strftime("%Y-%m-%d"))
+        for _c in _export.select_dtypes(include=["datetimetz", "datetime64"]).columns:
+            _export[_c] = _export[_c].astype(str).replace("NaT", "")
         st.download_button("📄  Export All (JSON)",
                            data=json.dumps({
                                "total_records": len(raw),
                                "source": "State WARN filings / amp2026/Warn-Tracker",
-                               "records": raw.assign(
-                                   date=raw["date"].dt.strftime("%Y-%m-%d")
-                               ).to_dict(orient="records"),
+                               "records": json.loads(
+                                   _export.to_json(orient="records")
+                               ),
                            }, indent=2),
                            file_name="warn_notices_all.json",
                            mime="application/json",
