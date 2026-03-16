@@ -471,7 +471,7 @@ with t_db:
                                "records": raw.assign(
                                    date=raw["date"].dt.strftime("%Y-%m-%d")
                                ).to_dict(orient="records"),
-                           }, indent=2),
+                           }, indent=2, default=str),
                            file_name="warn_notices_all.json",
                            mime="application/json",
                            width='stretch')
