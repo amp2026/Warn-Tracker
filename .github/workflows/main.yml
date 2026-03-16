@@ -21,10 +21,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install tools
-        run: pip install warn-scraper warn-transformer pandas requests
-
-      - name: Install dependencies
-        run: pip install beautifulsoup4 html5lib
+        run: pip install warn-scraper warn-transformer pandas requests beautifulsoup4 html5lib pdfplumber openpyxl
 
       # ── Primary source: warn-scraper covers 40 states + DC ──────────────
       # WA (Washington) is excluded: its built-in scraper has a while-True
@@ -54,11 +51,14 @@ jobs:
             echo "No raw CSVs found — skipping consolidation (will use existing data)"
           fi
 
-      # ── Supplementary: WARN Firehose for the 10 unsupported states ───────
-      # Missing states: AR, MA, MN, MS, NC, NV, NH, ND, WV, WY
-      - name: Fetch missing states via WARN Firehose
-        env:
-          WARN_FIREHOSE_API_KEY: ${{ secrets.WARN_FIREHOSE_API_KEY }}
+      # ── Supplementary: direct state-site scrapers for unsupported states ──
+      # MA  → mass.gov CSV download
+      # NC  → nccommerce.com HTML/Excel
+      # WV  → workforcewv.org HTML listing
+      # MS  → mdes.ms.gov HTML table
+      # NV  → detr.nv.gov PDF (pdfplumber)
+      # AR/WY → no public data (state law); MN/NH/ND → no bulk source found
+      - name: Fetch missing states (direct scrapers)
         run: python scripts/fetch_missing_states.py
 
       # ── Merge both sources and normalize column names ────────────────────
