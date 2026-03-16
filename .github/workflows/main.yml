@@ -62,12 +62,17 @@ jobs:
         run: python scripts/fetch_missing_states.py
 
       # ── PDF-sourced states (MN, ND) ──────────────────────────────────────
-      # These states publish WARN data only as PDFs (MN: one PDF per notice,
-      # ND: best-effort).  Records are tagged source_quality="pdf_sourced"
-      # to signal lower date/count precision and reduced freshness vs
-      # CSV/API sources.
+      # Fallback for MN/ND when their state sites publish only PDFs.
+      # Records tagged source_quality="pdf_sourced" (lower precision).
       - name: Fetch PDF-sourced states (MN, ND)
         run: python scripts/fetch_pdf_sourced.py
+
+      # ── layoffdata.com — aggregated WARN database ────────────────────────
+      # Covers all 10 warn-scraper-missing states that have public data.
+      # Fills NH (no other source) and supplements MN/ND/MA/NC/WV/MS/NV.
+      # AR and WY are skipped (no public data by state law).
+      - name: Fetch missing states via layoffdata.com
+        run: python scripts/fetch_layoffdata.py
 
       # ── Merge all sources and normalize column names ──────────────────────
       - name: Merge and normalize
@@ -75,38 +80,27 @@ jobs:
           python - <<'EOF'
           import pandas as pd, os
 
-          primary    = "data/processed/consolidated.csv"
-          supplement = "data/processed/missing_states.csv"
-          pdf_src    = "data/processed/pdf_sourced_states.csv"
+          primary      = "data/processed/consolidated.csv"
+          supplement   = "data/processed/missing_states.csv"
+          pdf_src      = "data/processed/pdf_sourced_states.csv"
+          layoffdata   = "data/processed/layoffdata_states.csv"
 
           frames = []
 
-          # warn-scraper + WA custom scraper output (consolidated by warn-transformer)
-          if os.path.exists(primary):
-              df_main = pd.read_csv(primary)
-              if "source_quality" not in df_main.columns:
-                  df_main["source_quality"] = "csv"
-              print(f"warn-scraper: {len(df_main)} records")
-              frames.append(df_main)
-          else:
-              print("WARNING: no consolidated.csv from warn-scraper")
+          def load(path, default_quality, label):
+              if not os.path.exists(path):
+                  return
+              df = pd.read_csv(path)
+              if "source_quality" not in df.columns:
+                  df["source_quality"] = default_quality
+              print(f"{label}: {len(df)} records")
+              frames.append(df)
 
-          # Direct HTML/CSV scrapers (MA, NC, WV, MS, NV)
-          if os.path.exists(supplement):
-              df_supp = pd.read_csv(supplement)
-              if "source_quality" not in df_supp.columns:
-                  df_supp["source_quality"] = "html_scraped"
-              print(f"Direct scrapers (missing states): {len(df_supp)} records")
-              frames.append(df_supp)
-
-          # PDF-sourced scrapers (MN, ND) — tagged separately
-          if os.path.exists(pdf_src):
-              df_pdf = pd.read_csv(pdf_src)
-              # source_quality already set to "pdf_sourced" by fetch_pdf_sourced.py
-              if "source_quality" not in df_pdf.columns:
-                  df_pdf["source_quality"] = "pdf_sourced"
-              print(f"PDF-sourced (MN, ND): {len(df_pdf)} records")
-              frames.append(df_pdf)
+          # Priority order matters for dedup (higher priority = lower rank number)
+          load(primary,    "csv",          "warn-scraper + WA")
+          load(supplement, "html_scraped", "Direct state scrapers (MA NC WV MS NV)")
+          load(pdf_src,    "pdf_sourced",  "PDF-sourced (MN ND)")
+          load(layoffdata, "html_scraped", "layoffdata.com (MA MN MS NC NV NH ND WV)")
 
           if not frames:
               print("WARNING: no new data; keeping existing consolidated.csv unchanged")
@@ -116,7 +110,6 @@ jobs:
 
           # Normalize column names
           df.columns = [c.lower().replace(" ", "_").replace("-", "_") for c in df.columns]
-
           renames = {
               "jobs":            "workers",
               "no_of_employees": "workers",
@@ -126,7 +119,6 @@ jobs:
               "classification":  "type",
           }
           df = df.rename(columns=renames)
-
           for col in ("state", "company", "workers", "date", "city", "type",
                       "source_quality"):
               if col not in df.columns:
@@ -136,18 +128,16 @@ jobs:
           df["date"]    = pd.to_datetime(df["date"], errors="coerce")
           df = df.dropna(subset=["date"])
 
-          # Drop duplicates; keep "csv" quality over "pdf_sourced" when both exist
+          # Dedup: prefer higher-quality source when same record appears in multiple
           quality_rank = {"csv": 0, "html_scraped": 1, "pdf_sourced": 2}
           df["_rank"] = df["source_quality"].map(quality_rank).fillna(9)
           df = df.sort_values("_rank")
           before = len(df)
-          df = df.drop_duplicates(
-              subset=["company", "state", "date", "workers"], keep="first"
-          )
+          df = df.drop_duplicates(subset=["company", "state", "date", "workers"],
+                                  keep="first")
           df = df.drop(columns=["_rank"])
           print(f"Deduped: {before} → {len(df)} records")
 
-          # Print breakdown by source_quality
           for sq, grp in df.groupby("source_quality", dropna=False):
               states = sorted(grp["state"].dropna().unique().tolist())
               print(f"  {sq}: {len(grp)} records  states={states}")
@@ -156,8 +146,7 @@ jobs:
           df.to_csv(primary, index=False)
           print(f"Final: {len(df)} records saved to {primary}")
 
-          # Clean up temp files
-          for path in (supplement, pdf_src):
+          for path in (supplement, pdf_src, layoffdata):
               if os.path.exists(path):
                   os.remove(path)
           EOF
