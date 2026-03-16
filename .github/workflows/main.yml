@@ -25,10 +25,19 @@ jobs:
 
       # ── Primary source: warn-scraper covers 40 states + DC ──────────────
       - name: Scrape all supported states (warn-scraper)
-        run: warn-scraper all --data-dir ./data/raw/
+        # Some state sites timeout or change structure — don't let one bad state
+        # kill the whole run. The transformer will work with whatever was saved.
+        run: warn-scraper all --data-dir ./data/raw/ || echo "warn-scraper finished with errors; continuing with partial data"
 
       - name: Transform & consolidate (warn-transformer)
-        run: warn-transformer consolidate --data-dir ./data/raw/ --output-dir ./data/processed/
+        # Only run if at least one raw CSV was produced
+        run: |
+          if ls ./data/raw/*.csv 1>/dev/null 2>&1; then
+            warn-transformer consolidate --data-dir ./data/raw/ --output-dir ./data/processed/ \
+              || echo "warn-transformer had errors; will use whatever was produced"
+          else
+            echo "No raw CSVs found — skipping consolidation (will use existing data)"
+          fi
 
       # ── Supplementary: WARN Firehose for the 10 unsupported states ───────
       # Missing states: AR, MA, MN, MS, NC, NV, NH, ND, WV, WY
@@ -63,8 +72,9 @@ jobs:
               frames.append(df_supp)
 
           if not frames:
-              print("ERROR: no data to process")
-              raise SystemExit(1)
+              # Fall back to existing consolidated.csv so the app keeps working
+              print("WARNING: no new data; keeping existing consolidated.csv unchanged")
+              raise SystemExit(0)
 
           df = pd.concat(frames, ignore_index=True)
 
