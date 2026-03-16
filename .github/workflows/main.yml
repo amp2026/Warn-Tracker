@@ -30,12 +30,12 @@ jobs:
       - name: Scrape all supported states (warn-scraper)
         # Some state sites timeout or change structure — don't let one bad state
         # kill the whole run. The transformer will work with whatever was saved.
+        continue-on-error: true
         run: |
           warn-scraper \
             AK AL AZ CA CO CT DC DE FL GA HI IA ID IL IN KS KY LA \
             MD ME MI MO MT NE NJ NM NY OH OK OR PA RI SC SD TN TX UT VA VT WI \
-            --data-dir ./data/raw/ \
-          || echo "warn-scraper finished with errors; continuing with partial data"
+            --data-dir ./data/raw/
 
       # ── WA: custom scraper with proper last-page detection ───────────────
       - name: Fetch Washington State (custom scraper)
