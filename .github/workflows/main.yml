@@ -41,6 +41,16 @@ jobs:
       - name: Fetch Washington State (custom scraper)
         run: python scripts/fetch_wa.py
 
+      # Save a copy of the committed historical CSV before warn-transformer
+      # overwrites data/processed/consolidated.csv with today's scrape only.
+      # This lets the merge step union today's data with accumulated history.
+      - name: Preserve historical data
+        run: |
+          if [ -f data/processed/consolidated.csv ]; then
+            cp data/processed/consolidated.csv data/processed/consolidated_history.csv
+            echo "Saved $(wc -l < data/processed/consolidated_history.csv) historical rows"
+          fi
+
       - name: Transform & consolidate (warn-transformer)
         # Only run if at least one raw CSV was produced
         run: |
@@ -75,6 +85,7 @@ jobs:
           import pandas as pd, os
 
           primary      = "data/processed/consolidated.csv"
+          history      = "data/processed/consolidated_history.csv"
           supplement   = "data/processed/missing_states.csv"
           pdf_src      = "data/processed/pdf_sourced_states.csv"
 
@@ -90,7 +101,8 @@ jobs:
               frames.append(df)
 
           # Priority order matters for dedup (higher priority = lower rank number)
-          load(primary,    "csv",          "warn-scraper + WA")
+          load(primary,    "csv",          "warn-scraper + WA (today)")
+          load(history,    "csv",          "Historical archive (accumulated)")
           load(supplement, "html_scraped", "Direct state scrapers (MA NC WV MS NV NH)")
           load(pdf_src,    "pdf_sourced",  "PDF-sourced (MN ND)")
 
@@ -138,7 +150,7 @@ jobs:
           df.to_csv(primary, index=False)
           print(f"Final: {len(df)} records saved to {primary}")
 
-          for path in (supplement, pdf_src):
+          for path in (supplement, pdf_src, history):
               if os.path.exists(path):
                   os.remove(path)
           EOF

@@ -94,7 +94,7 @@ def fetch_ma():
     """
     today = date.today()
     current_fy = today.year if today.month <= 6 else today.year + 1
-    fiscal_years = [current_fy, current_fy - 1]
+    fiscal_years = [current_fy, current_fy - 1, current_fy - 2]  # current + 2 prior FYs → back to ~2024
 
     frames = []
     for fy in fiscal_years:
@@ -366,7 +366,7 @@ def fetch_nh():
 
     # Collect PDF links from the index
     from datetime import date as _date
-    cutoff_year = _date.today().year - 1
+    cutoff_year = 2024
     pdf_links = []
     for a in soup.find_all("a", href=True):
         href = a["href"]
