@@ -8,12 +8,12 @@ Coverage & status:
   WV  - workforcewv.org listing page (HTML scrape)
   MS  - mdes.ms.gov WARN information page (HTML scrape)
   NV  - detr.nv.gov  PDF (requires pdfplumber; skipped if unavailable)
+  NH  - nhes.nh.gov  individual notice PDFs (requires pdfplumber)
 
 Not available (no public data source):
   AR  - confidential by state law (A.C.A. § 11-10-314)
   WY  - confidential by state law (Wyo. Stat. § 9-2-2607)
   MN  - individual PDFs per notice only; no bulk download
-  NH  - no structured public list published
   ND  - no structured public table found
 
 Output: data/processed/missing_states.csv
@@ -338,11 +338,110 @@ def fetch_nv():
 # States with no publicly accessible data
 # ──────────────────────────────────────────────────────────────────────────────
 
+# ──────────────────────────────────────────────────────────────────────────────
+# New Hampshire  —  nhes.nh.gov individual notice PDFs
+# ──────────────────────────────────────────────────────────────────────────────
+
+def fetch_nh():
+    """
+    NH Employment Security publishes individual WARN notice PDFs at:
+      https://www.nhes.nh.gov/elmi/products/warn/index.htm
+    Each PDF is a single notice; we parse key fields with pdfplumber.
+    """
+    try:
+        import pdfplumber
+    except ImportError:
+        print("  NH: pdfplumber not installed — skipping", flush=True)
+        return pd.DataFrame()
+
+    index_url = "https://www.nhes.nh.gov/elmi/products/warn/index.htm"
+    print(f"  NH index: {index_url}", flush=True)
+    try:
+        resp = _get(index_url)
+    except requests.RequestException as e:
+        print(f"  NH: index fetch failed ({e})", flush=True)
+        return pd.DataFrame()
+
+    soup = BeautifulSoup(resp.content, "html.parser")
+
+    # Collect PDF links from the index
+    from datetime import date as _date
+    cutoff_year = _date.today().year - 1
+    pdf_links = []
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        if not href.lower().endswith(".pdf"):
+            continue
+        # Filter to recent years
+        years = re.findall(r"20\d{2}", href + " " + a.get_text())
+        if not years or max(int(y) for y in years) < cutoff_year:
+            continue
+        full = href if href.startswith("http") else "https://www.nhes.nh.gov" + href
+        if full not in pdf_links:
+            pdf_links.append(full)
+
+    if not pdf_links:
+        # Fall back: all PDFs on the page
+        pdf_links = [
+            ("https://www.nhes.nh.gov" + a["href"])
+            if not a["href"].startswith("http") else a["href"]
+            for a in soup.find_all("a", href=True)
+            if a["href"].lower().endswith(".pdf")
+        ]
+
+    print(f"  NH: {len(pdf_links)} PDF(s) to process", flush=True)
+
+    KV = {
+        "company": re.compile(
+            r"(?:company|employer|business)\s*[:\-]\s*(.+)", re.I),
+        "date": re.compile(
+            r"(?:notice\s+date|effective\s+date|warn\s+date|date)\s*[:\-]\s*(.+)", re.I),
+        "workers": re.compile(
+            r"(?:employees\s+affected|number\s+of\s+employees|workers|jobs)\s*[:\-]\s*(\d[\d,]*)",
+            re.I),
+        "city": re.compile(
+            r"(?:location|city|facility|address)\s*[:\-]\s*(.+)", re.I),
+        "type": re.compile(
+            r"(?:type\s+of\s+action|action\s+type|layoff\s+type)\s*[:\-]\s*(.+)", re.I),
+    }
+
+    records = []
+    for url in pdf_links:
+        print(f"    NH: {url}", flush=True)
+        try:
+            pdf_resp = _get(url)
+        except requests.RequestException as e:
+            print(f"      skipped ({e})", flush=True)
+            continue
+        try:
+            import io as _io
+            with pdfplumber.open(_io.BytesIO(pdf_resp.content)) as pdf:
+                text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+        except Exception as e:
+            print(f"      PDF parse error ({e})", flush=True)
+            continue
+
+        rec = {"state": "NH"}
+        for field, pattern in KV.items():
+            m = pattern.search(text)
+            if m:
+                rec[field] = _clean(m.group(1))
+        if rec.get("company"):
+            records.append(rec)
+
+    if not records:
+        print("  NH: no records extracted", flush=True)
+        return pd.DataFrame()
+
+    df = pd.DataFrame(records)
+    print(f"  NH: {len(df)} raw records", flush=True)
+    return df
+
+
 NO_PUBLIC_DATA = {
     "AR": "confidential by state law (A.C.A. § 11-10-314)",
     "WY": "confidential by state law (Wyo. Stat. § 9-2-2607)",
-    "MN": "only individual PDFs per notice — no bulk data source",
-    "NH": "no structured public list published by NHES",
+    "MN": "only individual PDFs per notice — covered by fetch_pdf_sourced.py",
     "ND": "no public bulk data table found on jobsnd.com",
 }
 
@@ -408,6 +507,7 @@ def main():
         ("WV", fetch_wv),
         ("MS", fetch_ms),
         ("NV", fetch_nv),
+        ("NH", fetch_nh),
     ]
 
     frames = []
