@@ -21,20 +21,44 @@ jobs:
           python-version: '3.11'
 
       - name: Install tools
-        run: pip install warn-scraper warn-transformer pandas requests
+        run: pip install warn-scraper warn-transformer pandas requests beautifulsoup4 html5lib pdfplumber openpyxl
 
       # ── Primary source: warn-scraper covers 40 states + DC ──────────────
+      # WA (Washington) is excluded: its built-in scraper has a while-True
+      # pagination loop with no last-page detection — it hangs for 30+ minutes.
+      # WA is fetched separately below via scripts/fetch_wa.py.
       - name: Scrape all supported states (warn-scraper)
-        run: warn-scraper all --data-dir ./data/raw/
+        # Some state sites timeout or change structure — don't let one bad state
+        # kill the whole run. The transformer will work with whatever was saved.
+        run: |
+          warn-scraper \
+            AK AL AZ CA CO CT DC DE FL GA HI IA ID IL IN KS KY LA \
+            MD ME MI MO MT NE NJ NM NY OH OK OR PA RI SC SD TN TX UT VA VT WI \
+            --data-dir ./data/raw/ \
+          || echo "warn-scraper finished with errors; continuing with partial data"
+
+      # ── WA: custom scraper with proper last-page detection ───────────────
+      - name: Fetch Washington State (custom scraper)
+        run: python scripts/fetch_wa.py
 
       - name: Transform & consolidate (warn-transformer)
-        run: warn-transformer consolidate --data-dir ./data/raw/ --output-dir ./data/processed/
+        # Only run if at least one raw CSV was produced
+        run: |
+          if ls ./data/raw/*.csv 1>/dev/null 2>&1; then
+            warn-transformer consolidate --data-dir ./data/raw/ --output-dir ./data/processed/ \
+              || echo "warn-transformer had errors; will use whatever was produced"
+          else
+            echo "No raw CSVs found — skipping consolidation (will use existing data)"
+          fi
 
-      # ── Supplementary: WARN Firehose for the 10 unsupported states ───────
-      # Missing states: AR, MA, MN, MS, NC, NV, NH, ND, WV, WY
-      - name: Fetch missing states via WARN Firehose
-        env:
-          WARN_FIREHOSE_API_KEY: ${{ secrets.WARN_FIREHOSE_API_KEY }}
+      # ── Supplementary: direct state-site scrapers for unsupported states ──
+      # MA  → mass.gov CSV download
+      # NC  → nccommerce.com HTML/Excel
+      # WV  → workforcewv.org HTML listing
+      # MS  → mdes.ms.gov HTML table
+      # NV  → detr.nv.gov PDF (pdfplumber)
+      # AR/WY → no public data (state law); MN/NH/ND → no bulk source found
+      - name: Fetch missing states (direct scrapers)
         run: python scripts/fetch_missing_states.py
 
       # ── Merge both sources and normalize column names ────────────────────
@@ -56,15 +80,16 @@ jobs:
           else:
               print("WARNING: no consolidated.csv from warn-scraper")
 
-          # Load WARN Firehose supplementary data
+          # Load WARN Firehose supplementary data (10 states not in warn-scraper)
           if os.path.exists(supplement):
               df_supp = pd.read_csv(supplement)
               print(f"WARN Firehose (missing states): {len(df_supp)} records")
               frames.append(df_supp)
 
           if not frames:
-              print("ERROR: no data to process")
-              raise SystemExit(1)
+              # Fall back to existing consolidated.csv so the app keeps working
+              print("WARNING: no new data; keeping existing consolidated.csv unchanged")
+              raise SystemExit(0)
 
           df = pd.concat(frames, ignore_index=True)
 
