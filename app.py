@@ -161,7 +161,7 @@ hdr_l, hdr_r = st.columns([5, 1])
 with hdr_l:
     st.markdown("## ⚠️ WARN Act Tracker")
     last = raw["date"].max().strftime("%b %d, %Y")
-    st.caption(f"Data from WARN Firehose · Last updated {last}")
+    st.caption(f"Data from state WARN filings · Last updated {last}")
 with hdr_r:
     if st.button("🔄 Refresh", width="stretch"):
         st.cache_data.clear()
@@ -431,7 +431,7 @@ with t_companies:
 
 with t_db:
     st.markdown("### 🗄️ Database & Storage")
-    st.caption("Live data from WARN Firehose API · Updated daily via GitHub Actions")
+    st.caption("State WARN filings · Updated daily via GitHub Actions")
 
     d1, d2, d3, d4 = st.columns(4)
     d1.metric("Total Records",  f"{len(raw):,}")
@@ -439,7 +439,7 @@ with t_db:
               f"{raw['date'].min().strftime('%Y-%m-%d')} – "
               f"{raw['date'].max().strftime('%Y-%m-%d')}")
     d3.metric("States Covered", f"{raw['state'].nunique():,}")
-    d4.metric("Source", "WARN Firehose API")
+    d4.metric("Source", "State WARN filings")
 
     st.markdown("---")
 
@@ -461,7 +461,7 @@ with t_db:
         st.download_button("📄  Export All (JSON)",
                            data=json.dumps({
                                "total_records": len(raw),
-                               "source": "WARN Firehose / amp2026/Warn-Tracker",
+                               "source": "State WARN filings / amp2026/Warn-Tracker",
                                "records": raw.assign(
                                    date=raw["date"].dt.strftime("%Y-%m-%d")
                                ).to_dict(orient="records"),
