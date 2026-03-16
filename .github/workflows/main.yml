@@ -68,10 +68,12 @@ jobs:
         run: python scripts/fetch_pdf_sourced.py
 
       # ── layoffdata.com — aggregated WARN database ────────────────────────
-      # Covers all 10 warn-scraper-missing states that have public data.
-      # Fills NH (no other source) and supplements MN/ND/MA/NC/WV/MS/NV.
-      # AR and WY are skipped (no public data by state law).
-      - name: Fetch missing states via layoffdata.com
+      # Covers the 10 warn-scraper-missing states + DC.
+      # DC: fills the early-year gap before DC publishes its year-specific
+      #     WARN page (warn-notifications-YYYY, typically live April/May).
+      # NH: no other public source exists.
+      # AR/WY: skipped — no public data by state law.
+      - name: Fetch missing states + DC via layoffdata.com
         run: python scripts/fetch_layoffdata.py
 
       # ── Merge all sources and normalize column names ──────────────────────
@@ -100,7 +102,7 @@ jobs:
           load(primary,    "csv",          "warn-scraper + WA")
           load(supplement, "html_scraped", "Direct state scrapers (MA NC WV MS NV)")
           load(pdf_src,    "pdf_sourced",  "PDF-sourced (MN ND)")
-          load(layoffdata, "html_scraped", "layoffdata.com (MA MN MS NC NV NH ND WV)")
+          load(layoffdata, "html_scraped", "layoffdata.com (DC MA MN MS NC NV NH ND WV)")
 
           if not frames:
               print("WARNING: no new data; keeping existing consolidated.csv unchanged")

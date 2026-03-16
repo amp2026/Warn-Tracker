@@ -1,18 +1,20 @@
 """
-Fetches WARN Act data for the 10 states not covered by warn-scraper
-from layoffdata.com (WARN Database).
+Fetches WARN Act data from layoffdata.com (WARN Database).
 
-layoffdata.com aggregates official state WARN notices into standard HTML
-tables, updated regularly.  It covers all states that publish public data;
-AR and WY have no records (confidential by state law) and are skipped.
+Covers two groups of states:
 
-States targeted:
-  MA  NH  MN  MS  NC  NV  ND  WV   → data confirmed available
-  AR  WY                            → no public data; skipped gracefully
+1. The 10 states not supported by warn-scraper:
+     MA  NH  MN  MS  NC  NV  ND  WV  → data confirmed available
+     AR  WY                           → no public data; skipped gracefully
 
-This script is a supplement to fetch_missing_states.py (direct state-site
-scrapers).  Running both provides redundancy; the merge step deduplicates,
-preferring records from direct sources over layoffdata.com aggregations.
+2. DC — supplemental coverage for the early-year gap.
+   DC publishes year-specific WARN pages (warn-notifications-YYYY) that
+   typically go live in April/May.  Until then, warn-scraper falls back
+   to the previous year's data.  layoffdata.com carries current-year DC
+   filings as soon as they are submitted, closing that gap.
+
+This script runs alongside fetch_missing_states.py (direct state-site
+scrapers).  The merge step deduplicates, preferring direct sources.
 
 Output: data/processed/layoffdata_states.csv
 """
@@ -43,6 +45,7 @@ NO_PUBLIC_DATA = {"AR", "WY"}
 
 STATES = {
     "AR": "arkansas",        # confidential — A.C.A. § 11-10-314
+    "DC": "dc",              # supplement: covers early-year gap before DC publishes new page
     "MA": "massachusetts",
     "MN": "minnesota",
     "MS": "mississippi",
