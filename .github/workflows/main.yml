@@ -21,7 +21,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install tools
-        run: pip install warn-scraper warn-transformer pandas requests beautifulsoup4 html5lib pdfplumber openpyxl
+        run: pip install warn-scraper warn-transformer pandas requests beautifulsoup4 html5lib pdfplumber openpyxl pyquery
 
       # ── Primary source: warn-scraper covers 40 states + DC ──────────────
       # WA (Washington) is excluded: its built-in scraper has a while-True
