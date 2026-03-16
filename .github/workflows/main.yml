@@ -21,7 +21,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install tools
-        run: pip install warn-scraper warn-transformer pandas requests beautifulsoup4 html5lib pdfplumber openpyxl
+        run: pip install warn-scraper warn-transformer pandas requests beautifulsoup4 html5lib pdfplumber openpyxl pyquery
 
       # ── Primary source: warn-scraper covers 40 states + DC ──────────────
       # WA (Washington) is excluded: its built-in scraper has a while-True
@@ -57,45 +57,61 @@ jobs:
       # WV  → workforcewv.org HTML listing
       # MS  → mdes.ms.gov HTML table
       # NV  → detr.nv.gov PDF (pdfplumber)
-      # AR/WY → no public data (state law); MN/NH/ND → no bulk source found
+      # AR/WY → no public data (state law); NH → no public list
       - name: Fetch missing states (direct scrapers)
         run: python scripts/fetch_missing_states.py
 
-      # ── Merge both sources and normalize column names ────────────────────
+      # ── PDF-sourced states (MN, ND) ──────────────────────────────────────
+      # Fallback for MN/ND when their state sites publish only PDFs.
+      # Records tagged source_quality="pdf_sourced" (lower precision).
+      - name: Fetch PDF-sourced states (MN, ND)
+        run: python scripts/fetch_pdf_sourced.py
+
+      # ── layoffdata.com — aggregated WARN database ────────────────────────
+      # Covers the 10 warn-scraper-missing states + DC.
+      # DC: fills the early-year gap before DC publishes its year-specific
+      #     WARN page (warn-notifications-YYYY, typically live April/May).
+      # NH: no other public source exists.
+      # AR/WY: skipped — no public data by state law.
+      - name: Fetch missing states + DC via layoffdata.com
+        run: python scripts/fetch_layoffdata.py
+
+      # ── Merge all sources and normalize column names ──────────────────────
       - name: Merge and normalize
         run: |
           python - <<'EOF'
-          import pandas as pd, os, glob
+          import pandas as pd, os
 
-          primary = "data/processed/consolidated.csv"
-          supplement = "data/processed/missing_states.csv"
+          primary      = "data/processed/consolidated.csv"
+          supplement   = "data/processed/missing_states.csv"
+          pdf_src      = "data/processed/pdf_sourced_states.csv"
+          layoffdata   = "data/processed/layoffdata_states.csv"
 
           frames = []
 
-          # Load warn-scraper output
-          if os.path.exists(primary):
-              df_main = pd.read_csv(primary)
-              print(f"warn-scraper: {len(df_main)} records from {primary}")
-              frames.append(df_main)
-          else:
-              print("WARNING: no consolidated.csv from warn-scraper")
+          def load(path, default_quality, label):
+              if not os.path.exists(path):
+                  return
+              df = pd.read_csv(path)
+              if "source_quality" not in df.columns:
+                  df["source_quality"] = default_quality
+              print(f"{label}: {len(df)} records")
+              frames.append(df)
 
-          # Load WARN Firehose supplementary data (10 states not in warn-scraper)
-          if os.path.exists(supplement):
-              df_supp = pd.read_csv(supplement)
-              print(f"WARN Firehose (missing states): {len(df_supp)} records")
-              frames.append(df_supp)
+          # Priority order matters for dedup (higher priority = lower rank number)
+          load(primary,    "csv",          "warn-scraper + WA")
+          load(supplement, "html_scraped", "Direct state scrapers (MA NC WV MS NV)")
+          load(pdf_src,    "pdf_sourced",  "PDF-sourced (MN ND)")
+          load(layoffdata, "html_scraped", "layoffdata.com (DC MA MN MS NC NV NH ND WV)")
 
           if not frames:
-              # Fall back to existing consolidated.csv so the app keeps working
               print("WARNING: no new data; keeping existing consolidated.csv unchanged")
               raise SystemExit(0)
 
           df = pd.concat(frames, ignore_index=True)
 
-          # Normalize column names across both sources
+          # Normalize column names
           df.columns = [c.lower().replace(" ", "_").replace("-", "_") for c in df.columns]
-
           renames = {
               "jobs":            "workers",
               "no_of_employees": "workers",
@@ -105,8 +121,8 @@ jobs:
               "classification":  "type",
           }
           df = df.rename(columns=renames)
-
-          for col in ("state", "company", "workers", "date", "city", "type"):
+          for col in ("state", "company", "workers", "date", "city", "type",
+                      "source_quality"):
               if col not in df.columns:
                   df[col] = None
 
@@ -114,19 +130,27 @@ jobs:
           df["date"]    = pd.to_datetime(df["date"], errors="coerce")
           df = df.dropna(subset=["date"])
 
-          # Drop duplicates (same company + state + date + workers)
+          # Dedup: prefer higher-quality source when same record appears in multiple
+          quality_rank = {"csv": 0, "html_scraped": 1, "pdf_sourced": 2}
+          df["_rank"] = df["source_quality"].map(quality_rank).fillna(9)
+          df = df.sort_values("_rank")
           before = len(df)
-          df = df.drop_duplicates(subset=["company", "state", "date", "workers"], keep="first")
+          df = df.drop_duplicates(subset=["company", "state", "date", "workers"],
+                                  keep="first")
+          df = df.drop(columns=["_rank"])
           print(f"Deduped: {before} → {len(df)} records")
+
+          for sq, grp in df.groupby("source_quality", dropna=False):
+              states = sorted(grp["state"].dropna().unique().tolist())
+              print(f"  {sq}: {len(grp)} records  states={states}")
 
           df = df.sort_values("date", ascending=False).reset_index(drop=True)
           df.to_csv(primary, index=False)
           print(f"Final: {len(df)} records saved to {primary}")
-          print(f"States covered: {sorted(df['state'].dropna().unique().tolist())}")
 
-          # Clean up temp file
-          if os.path.exists(supplement):
-              os.remove(supplement)
+          for path in (supplement, pdf_src, layoffdata):
+              if os.path.exists(path):
+                  os.remove(path)
           EOF
 
       - name: Commit and push data
