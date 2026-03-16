@@ -163,7 +163,7 @@ with hdr_l:
     last = raw["date"].max().strftime("%b %d, %Y")
     st.caption(f"Data from WARN Firehose · Last updated {last}")
 with hdr_r:
-    if st.button("🔄 Refresh", use_container_width=True):
+    if st.button("🔄 Refresh", width="stretch"):
         st.cache_data.clear()
         st.rerun()
 
@@ -188,7 +188,7 @@ with st.sidebar:
     d_from = st.date_input("From", value=min_d, min_value=min_d, max_value=max_d)
     d_to   = st.date_input("To",   value=max_d, min_value=min_d, max_value=max_d)
 
-    if st.button("✕  Clear filters", use_container_width=True):
+    if st.button("✕  Clear filters", width="stretch"):
         st.rerun()
 
 
@@ -236,11 +236,11 @@ with t_dash:
     with r1a:
         st.plotly_chart(bar_chart(monthly, "label", "notices",
                                   "Monthly WARN Notices", CLR["red"]),
-                        use_container_width=True)
+                        width='stretch')
     with r1b:
         st.plotly_chart(bar_chart(monthly, "label", "workers",
                                   "Workers Affected Over Time", CLR["orange"]),
-                        use_container_width=True)
+                        width='stretch')
 
     # Row 2 — stacked Layoffs vs Closures
     df_l = monthly_frame(df[df["type"] == "Layoff"]).rename(
@@ -270,13 +270,13 @@ with t_dash:
             stacked_bar("Layoffs vs Closures — Notices",
                         df_l, df_c, "layoffs", "closures",
                         "Layoffs", "Closures"),
-            use_container_width=True)
+            width='stretch')
     with r2b:
         st.plotly_chart(
             stacked_bar("Layoffs vs Closures — Workers",
                         df_l, df_c, "layoff_workers", "closure_workers",
                         "Layoffs", "Closures"),
-            use_container_width=True)
+            width='stretch')
 
     # Row 3 — median workers line chart
     med_all     = monthly_median_frame(df)
@@ -300,7 +300,7 @@ with t_dash:
         height=300, yaxis_title="Workers", **CHART_LAYOUT)
     fig_med.update_xaxes(showgrid=False)
     fig_med.update_yaxes(gridcolor="#f3f4f6")
-    st.plotly_chart(fig_med, use_container_width=True)
+    st.plotly_chart(fig_med, width='stretch')
 
     # Row 4 — pie + state ranking
     r4a, r4b = st.columns([1, 2])
@@ -315,7 +315,7 @@ with t_dash:
         fig_pie.update_layout(height=280, **{**CHART_LAYOUT,
                                "margin": dict(t=44, b=10, l=10, r=10)})
         fig_pie.update_traces(textfont_size=11)
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_pie, width='stretch')
 
     with r4b:
         st.markdown("**States by Notices**")
@@ -335,7 +335,7 @@ with t_dash:
                     "Notices", max_value=max_n, format="%d"),
                 "workers": st.column_config.NumberColumn("Workers", format="%d"),
             },
-            height=280, use_container_width=True, hide_index=True,
+            height=280, width='stretch', hide_index=True,
         )
 
 
@@ -357,7 +357,7 @@ with t_notices:
             "workers": st.column_config.NumberColumn("Workers", format="%d"),
             "type":    st.column_config.TextColumn("Type", width=90),
         },
-        height=600, use_container_width=True, hide_index=True,
+        height=600, width='stretch', hide_index=True,
     )
 
 
@@ -377,7 +377,7 @@ with t_states:
         bar_chart(sdf.head(20).sort_values("notices"), "name", "notices",
                   "Top 20 States by WARN Filings", CLR["red"],
                   height=450, horizontal=True),
-        use_container_width=True)
+        width='stretch')
 
     max_n = int(sdf["notices"].max()) if len(sdf) else 1
     st.dataframe(
@@ -390,7 +390,7 @@ with t_states:
             "workers":        st.column_config.NumberColumn("Workers", format="%d"),
             "avg_per_notice": st.column_config.NumberColumn("Avg / Notice", format="%d"),
         },
-        height=500, use_container_width=True, hide_index=True,
+        height=500, width='stretch', hide_index=True,
     )
 
 
@@ -411,7 +411,7 @@ with t_companies:
         bar_chart(cdf.sort_values("workers"), "company", "workers",
                   "Top 20 Companies by Workers Affected", CLR["orange"],
                   height=500, horizontal=True),
-        use_container_width=True)
+        width='stretch')
 
     st.dataframe(
         cdf[["company", "notices", "workers", "states"]],
@@ -421,7 +421,7 @@ with t_companies:
             "workers": st.column_config.NumberColumn("Workers", format="%d"),
             "states":  st.column_config.NumberColumn("States", format="%d"),
         },
-        height=400, use_container_width=True, hide_index=True,
+        height=400, width='stretch', hide_index=True,
     )
 
 
@@ -449,13 +449,13 @@ with t_db:
                            data=raw.to_csv(index=False),
                            file_name="warn_notices_all.csv",
                            mime="text/csv",
-                           use_container_width=True)
+                           width='stretch')
     with dl2:
         st.download_button("🔽  Export Filtered (CSV)",
                            data=df.to_csv(index=False),
                            file_name="warn_notices_filtered.csv",
                            mime="text/csv",
-                           use_container_width=True)
+                           width='stretch')
     with dl3:
         import json
         st.download_button("📄  Export All (JSON)",
@@ -468,7 +468,7 @@ with t_db:
                            }, indent=2),
                            file_name="warn_notices_all.json",
                            mime="application/json",
-                           use_container_width=True)
+                           width='stretch')
 
     st.markdown("**Data Schema**")
     st.code("""{
