@@ -57,43 +57,64 @@ jobs:
       # WV  → workforcewv.org HTML listing
       # MS  → mdes.ms.gov HTML table
       # NV  → detr.nv.gov PDF (pdfplumber)
-      # AR/WY → no public data (state law); MN/NH/ND → no bulk source found
+      # AR/WY → no public data (state law); NH → no public list
       - name: Fetch missing states (direct scrapers)
         run: python scripts/fetch_missing_states.py
 
-      # ── Merge both sources and normalize column names ────────────────────
+      # ── PDF-sourced states (MN, ND) ──────────────────────────────────────
+      # These states publish WARN data only as PDFs (MN: one PDF per notice,
+      # ND: best-effort).  Records are tagged source_quality="pdf_sourced"
+      # to signal lower date/count precision and reduced freshness vs
+      # CSV/API sources.
+      - name: Fetch PDF-sourced states (MN, ND)
+        run: python scripts/fetch_pdf_sourced.py
+
+      # ── Merge all sources and normalize column names ──────────────────────
       - name: Merge and normalize
         run: |
           python - <<'EOF'
-          import pandas as pd, os, glob
+          import pandas as pd, os
 
-          primary = "data/processed/consolidated.csv"
+          primary    = "data/processed/consolidated.csv"
           supplement = "data/processed/missing_states.csv"
+          pdf_src    = "data/processed/pdf_sourced_states.csv"
 
           frames = []
 
-          # Load warn-scraper output
+          # warn-scraper + WA custom scraper output (consolidated by warn-transformer)
           if os.path.exists(primary):
               df_main = pd.read_csv(primary)
-              print(f"warn-scraper: {len(df_main)} records from {primary}")
+              if "source_quality" not in df_main.columns:
+                  df_main["source_quality"] = "csv"
+              print(f"warn-scraper: {len(df_main)} records")
               frames.append(df_main)
           else:
               print("WARNING: no consolidated.csv from warn-scraper")
 
-          # Load WARN Firehose supplementary data (10 states not in warn-scraper)
+          # Direct HTML/CSV scrapers (MA, NC, WV, MS, NV)
           if os.path.exists(supplement):
               df_supp = pd.read_csv(supplement)
-              print(f"WARN Firehose (missing states): {len(df_supp)} records")
+              if "source_quality" not in df_supp.columns:
+                  df_supp["source_quality"] = "html_scraped"
+              print(f"Direct scrapers (missing states): {len(df_supp)} records")
               frames.append(df_supp)
 
+          # PDF-sourced scrapers (MN, ND) — tagged separately
+          if os.path.exists(pdf_src):
+              df_pdf = pd.read_csv(pdf_src)
+              # source_quality already set to "pdf_sourced" by fetch_pdf_sourced.py
+              if "source_quality" not in df_pdf.columns:
+                  df_pdf["source_quality"] = "pdf_sourced"
+              print(f"PDF-sourced (MN, ND): {len(df_pdf)} records")
+              frames.append(df_pdf)
+
           if not frames:
-              # Fall back to existing consolidated.csv so the app keeps working
               print("WARNING: no new data; keeping existing consolidated.csv unchanged")
               raise SystemExit(0)
 
           df = pd.concat(frames, ignore_index=True)
 
-          # Normalize column names across both sources
+          # Normalize column names
           df.columns = [c.lower().replace(" ", "_").replace("-", "_") for c in df.columns]
 
           renames = {
@@ -106,7 +127,8 @@ jobs:
           }
           df = df.rename(columns=renames)
 
-          for col in ("state", "company", "workers", "date", "city", "type"):
+          for col in ("state", "company", "workers", "date", "city", "type",
+                      "source_quality"):
               if col not in df.columns:
                   df[col] = None
 
@@ -114,19 +136,30 @@ jobs:
           df["date"]    = pd.to_datetime(df["date"], errors="coerce")
           df = df.dropna(subset=["date"])
 
-          # Drop duplicates (same company + state + date + workers)
+          # Drop duplicates; keep "csv" quality over "pdf_sourced" when both exist
+          quality_rank = {"csv": 0, "html_scraped": 1, "pdf_sourced": 2}
+          df["_rank"] = df["source_quality"].map(quality_rank).fillna(9)
+          df = df.sort_values("_rank")
           before = len(df)
-          df = df.drop_duplicates(subset=["company", "state", "date", "workers"], keep="first")
+          df = df.drop_duplicates(
+              subset=["company", "state", "date", "workers"], keep="first"
+          )
+          df = df.drop(columns=["_rank"])
           print(f"Deduped: {before} → {len(df)} records")
+
+          # Print breakdown by source_quality
+          for sq, grp in df.groupby("source_quality", dropna=False):
+              states = sorted(grp["state"].dropna().unique().tolist())
+              print(f"  {sq}: {len(grp)} records  states={states}")
 
           df = df.sort_values("date", ascending=False).reset_index(drop=True)
           df.to_csv(primary, index=False)
           print(f"Final: {len(df)} records saved to {primary}")
-          print(f"States covered: {sorted(df['state'].dropna().unique().tolist())}")
 
-          # Clean up temp file
-          if os.path.exists(supplement):
-              os.remove(supplement)
+          # Clean up temp files
+          for path in (supplement, pdf_src):
+              if os.path.exists(path):
+                  os.remove(path)
           EOF
 
       - name: Commit and push data
