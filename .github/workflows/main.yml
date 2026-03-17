@@ -54,10 +54,13 @@ jobs:
           fi
 
       - name: Transform & consolidate (warn-transformer)
-        # Only run if at least one raw CSV was produced
+        # WARN_TRANSFORMER_OUTPUT_DIR tells warn-transformer where to find raw/
+        # and where to write processed/consolidated.csv (defaults to ~/.warn-transformer).
+        env:
+          WARN_TRANSFORMER_OUTPUT_DIR: ${{ github.workspace }}/data
         run: |
           if ls ./data/raw/*.csv 1>/dev/null 2>&1; then
-            warn-transformer consolidate --data-dir ./data/raw/ --output-dir ./data/processed/ \
+            warn-transformer consolidate \
               || echo "warn-transformer had errors; will use whatever was produced"
           else
             echo "No raw CSVs found — skipping consolidation (will use existing data)"
