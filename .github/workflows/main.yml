@@ -24,16 +24,17 @@ jobs:
         run: pip install warn-scraper warn-transformer pandas requests beautifulsoup4 html5lib pdfplumber openpyxl pyquery
 
       # ── Primary source: warn-scraper covers 40 states + DC ──────────────
-      # WA (Washington) is excluded: its built-in scraper has a while-True
-      # pagination loop with no last-page detection — it hangs for 30+ minutes.
-      # WA is fetched separately below via scripts/fetch_wa.py.
+      # WA excluded: built-in scraper has a while-True pagination loop → hangs.
+      #    WA is fetched separately below via scripts/fetch_wa.py.
+      # LA excluded: requires a Zyte API key (env ZYTE_API_KEY) to scrape; without
+      #    it the process hard-crashes and skips all subsequent states in the run.
       - name: Scrape all supported states (warn-scraper)
         # Some state sites timeout or change structure — don't let one bad state
         # kill the whole run. The transformer will work with whatever was saved.
         continue-on-error: true
         run: |
           warn-scraper \
-            AK AL AZ CA CO CT DC DE FL GA HI IA ID IL IN KS KY LA \
+            AK AL AZ CA CO CT DC DE FL GA HI IA ID IL IN KS KY \
             MD ME MI MO MT NE NJ NM NY OH OK OR PA RI SC SD TN TX UT VA VT WI \
             --data-dir ./data/raw/
 
