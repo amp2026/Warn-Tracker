@@ -132,6 +132,12 @@ jobs:
           # Normalize column names
           df.columns = [c.lower().replace(" ", "_").replace("-", "_") for c in df.columns]
           renames = {
+              # warn-transformer schema → our schema
+              "hash_id":         "id",
+              "postal_code":     "state",
+              "notice_date":     "date",
+              "location":        "city",
+              # common alternates from supplementary scrapers
               "jobs":            "workers",
               "no_of_employees": "workers",
               "employees":       "workers",
