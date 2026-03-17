@@ -182,6 +182,7 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add data/processed/consolidated.csv
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > data/processed/last_updated.txt
+          git add data/processed/consolidated.csv data/processed/last_updated.txt
           git commit -m "Update WARN data [skip ci]" || echo "No changes to commit"
           git push
