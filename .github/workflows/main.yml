@@ -53,6 +53,18 @@ jobs:
             echo "Saved $(wc -l < data/processed/consolidated_history.csv) historical rows"
           fi
 
+      - name: Create stubs for excluded states (LA, TX)
+        # warn-transformer has transformers for every state it knows about and will
+        # FileNotFoundError + crash if any state CSV is missing — even states we
+        # intentionally skipped. Empty-header stubs let it produce 0 records and
+        # continue normally instead of aborting before writing any output.
+        run: |
+          mkdir -p ./data/raw
+          echo 'Company Name,Location,Notice Date,Layoff Date,Employees Affected' \
+            > ./data/raw/la.csv
+          echo 'JOB_SITE_NAME,CITY_NAME,NOTICE_DATE,LayOff_Date,TOTAL_LAYOFF_NUMBER' \
+            > ./data/raw/tx.csv
+
       - name: Transform & consolidate (warn-transformer)
         # WARN_TRANSFORMER_OUTPUT_DIR tells warn-transformer where to find raw/
         # and where to write processed/consolidated.csv (defaults to ~/.warn-transformer).
