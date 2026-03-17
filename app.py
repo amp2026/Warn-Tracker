@@ -163,10 +163,14 @@ if raw.empty:
 hdr_l, hdr_r = st.columns([5, 1])
 with hdr_l:
     st.markdown("## ⚠️ WARN Act Tracker")
-    if "scraped_at" in raw.columns and raw["scraped_at"].notna().any():
-        last = raw["scraped_at"].max().strftime("%b %d, %Y")
-    else:
-        last = raw["date"].max().strftime("%b %d, %Y")
+    try:
+        _ts = open("data/processed/last_updated.txt").read().strip()
+        last = pd.to_datetime(_ts, utc=True).strftime("%b %d, %Y")
+    except Exception:
+        if "scraped_at" in raw.columns and raw["scraped_at"].notna().any():
+            last = raw["scraped_at"].max().strftime("%b %d, %Y")
+        else:
+            last = raw["date"].max().strftime("%b %d, %Y")
     st.caption(f"Data from state WARN filings · Last updated {last}")
 with hdr_r:
     if st.button("🔄 Refresh", width="stretch"):
