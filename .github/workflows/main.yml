@@ -26,8 +26,9 @@ jobs:
       # ── Primary source: warn-scraper covers 40 states + DC ──────────────
       # WA excluded: built-in scraper has a while-True pagination loop → hangs.
       #    WA is fetched separately below via scripts/fetch_wa.py.
-      # LA excluded: requires a Zyte API key (env ZYTE_API_KEY) to scrape; without
-      #    it the process hard-crashes and skips all subsequent states in the run.
+      # LA excluded: requires ZYTE_API_KEY — hard-crashes without it.
+      # TX excluded: blocks GitHub Actions IPs → raises "Scraper isn't scraping."
+      #    Both LA/TX hard-crash the process, skipping all states listed after them.
       - name: Scrape all supported states (warn-scraper)
         # Some state sites timeout or change structure — don't let one bad state
         # kill the whole run. The transformer will work with whatever was saved.
@@ -35,7 +36,7 @@ jobs:
         run: |
           warn-scraper \
             AK AL AZ CA CO CT DC DE FL GA HI IA ID IL IN KS KY \
-            MD ME MI MO MT NE NJ NM NY OH OK OR PA RI SC SD TN TX UT VA VT WI \
+            MD ME MI MO MT NE NJ NM NY OH OK OR PA RI SC SD TN UT VA VT WI \
             --data-dir ./data/raw/
 
       # ── WA: custom scraper with proper last-page detection ───────────────
