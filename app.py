@@ -171,7 +171,7 @@ with hdr_l:
             last = raw["scraped_at"].max().strftime("%b %d, %Y")
         else:
             last = raw["date"].max().strftime("%b %d, %Y")
-    st.caption(f"Data from state WARN filings · Last updated {last}")
+    st.caption(f"Data sourced from [layoffdata.com/data](https://layoffdata.com/data/) · Manually updated · Last updated {last}")
 with hdr_r:
     if st.button("🔄 Refresh", width="stretch"):
         st.cache_data.clear()
@@ -441,7 +441,7 @@ with t_companies:
 
 with t_db:
     st.markdown("### 🗄️ Database & Storage")
-    st.caption("State WARN filings · Updated daily via GitHub Actions")
+    st.caption("Data sourced from [layoffdata.com/data](https://layoffdata.com/data/) · Manually updated as new data is available")
 
     d1, d2, d3, d4 = st.columns(4)
     d1.metric("Total Records",  f"{len(raw):,}")
@@ -449,7 +449,7 @@ with t_db:
               f"{raw['date'].min().strftime('%Y-%m-%d')} – "
               f"{raw['date'].max().strftime('%Y-%m-%d')}")
     d3.metric("States Covered", f"{raw['state'].nunique():,}")
-    d4.metric("Source", "State WARN filings")
+    d4.metric("Source", "layoffdata.com/data")
 
     st.markdown("---")
 
@@ -474,7 +474,7 @@ with t_db:
         st.download_button("📄  Export All (JSON)",
                            data=json.dumps({
                                "total_records": len(raw),
-                               "source": "State WARN filings / amp2026/Warn-Tracker",
+                               "source": "https://layoffdata.com/data/",
                                "records": json.loads(
                                    _export.to_json(orient="records")
                                ),
