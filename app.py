@@ -177,6 +177,25 @@ with hdr_r:
         st.cache_data.clear()
         st.rerun()
 
+# ── WARN definition ────────────────────────────────────────────────────────
+
+with st.expander("What is the WARN Act?", expanded=False):
+    st.markdown("""
+The **Worker Adjustment and Retraining Notification (WARN) Act** is a U.S. federal law
+(29 U.S.C. § 2101) that requires employers with **100 or more employees** to provide
+**at least 60 days' advance written notice** before a plant closing or mass layoff
+affecting 50 or more workers at a single site.
+
+Notices are filed with the relevant state workforce agency and the local government,
+making them a leading indicator of large-scale job losses across the country.
+
+**Disclaimer:** Not all states are represented in this dataset. The following states
+currently have no data available: **Arkansas (AR), District of Columbia (DC),
+Wyoming (WY)**. Coverage for other states may be incomplete depending on reporting
+practices. This data is manually updated — recent filings may not yet be reflected.
+""")
+
+
 
 # ── Sidebar filters ────────────────────────────────────────────────────────
 
